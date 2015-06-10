@@ -1,3 +1,7 @@
+#CMSC 437 GUI Programming
+#HW2
+#Simple menu that reads a user-specified text file
+
 from tkinter import *
 
 class openWindow(Frame):
@@ -8,13 +12,12 @@ class openWindow(Frame):
 
     def initUI(self):
         self.parent.title("Simple menu")
-        self.parent.geometry("100x100+300+300")
+        self.parent.geometry("100x60+350+350")
         menubar = Menu(self.parent)
         self.parent.config(menu=menubar)
+        #bind calls enter() with 2 args
+        # so can't use self.callback
         self.parent.bind("<Return>", self.enter)
-        
-        fileMenu = Menu(menubar)
-        menubar.add_cascade(label="File", menu=fileMenu)
 
         self.e = Entry(self.parent)
         self.e.pack()
@@ -64,7 +67,7 @@ class Window(Frame):
         open_file_win.mainloop()
 
     def onExit(self):
-        self.quit()
+        self.parent.destroy()
         
 def main():
     data_entry = Window(Tk())
