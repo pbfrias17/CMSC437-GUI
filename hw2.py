@@ -1,4 +1,3 @@
-# w4tk.py  basic menues
 from tkinter import *
 
 class openWindow(Frame):
@@ -12,7 +11,7 @@ class openWindow(Frame):
         self.parent.geometry("100x100+300+300")
         menubar = Menu(self.parent)
         self.parent.config(menu=menubar)
-        self.parent.bind("<Key>", self.callback)
+        self.parent.bind("<Return>", self.enter)
         
         fileMenu = Menu(menubar)
         menubar.add_cascade(label="File", menu=fileMenu)
@@ -25,6 +24,9 @@ class openWindow(Frame):
         b1.pack()
         b2 = Button(self.parent, text="Cancel", width=7, command=self.cancel)
         b2.pack()
+
+    def enter(self, key):
+        self.callback()
 
     def callback(self):
         filename = self.e.get()
