@@ -161,7 +161,7 @@ public class TargetingSystem extends JFrame
       //graphics for bullethole
   }
   
-  class target {
+  private class target {
       //graphics for targets
       int center_x, center_y, center_diam;
       int num_rings;
