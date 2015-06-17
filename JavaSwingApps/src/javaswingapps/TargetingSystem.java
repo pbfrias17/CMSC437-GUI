@@ -25,6 +25,8 @@ public class TargetingSystem extends JFrame
   MyJPanel panel;
   private JDesktopPane theDesktop;
   int x, y, b;
+  int win_x = 1000;
+  int win_y = 1050;
   int r1x1 = 100;  // red rectangle
   int r1y1 = 120;
   int r1x2 = 200;
@@ -33,44 +35,38 @@ public class TargetingSystem extends JFrame
   int r2y1 = 220;
   int r2x2 = 300;
   int r2y2= 350;
-  int enemy_x = 90;
-  int enemy_y = 40;
-  int enemy_width = 200;
-  int enemy_height = 200;
-  int target_diam = 10;
+  int enemy_x = 250;
+  int enemy_y = 50;
+  int enemy_width = win_x - (2 * enemy_x);
+  int enemy_height = 2 * enemy_x;
+  int target_diam = 20;
   int target_radius = target_diam / 2;
+  int max_distance = target_diam;
   
   Color color1 = Color.red;
   Color color2 = Color.blue;
  
   Color targetColor = Color.green;
-  Color targetHit = Color.red;
+  Color targetHitColor = Color.red;
   Color bulletHole = Color.blue;
-  List<target> targets = new ArrayList<target>();
+  List<target> targets = new ArrayList<>();
   
 
   TargetingSystem()
   {
     
-    setTitle("Select2");
-    setSize(400,450); // see "dimension" below for smaller size
+    setTitle("Targeting System");
+    setSize(win_x,win_y);
     setBackground(Color.white);
     setForeground(Color.black);
-    // set up plot area
+    
     theDesktop = new JDesktopPane();
     getContentPane().add(theDesktop);
-    // Create internal frame
-    JInternalFrame frame = new JInternalFrame(
-        "Plot area", true, true, true, true);
-    // attach panel to internal frame
-    Container container = frame.getContentPane();
+    Container container = getContentPane();
     panel = new MyJPanel();
     container.add(panel, BorderLayout.CENTER);
-    // set size of internal frame to size of its contents
-    frame.pack(); // uses class Dimension
-    theDesktop.add(frame);
     panel.addMouseListener (new mousePressHandler());
-    frame.setVisible(true);
+    //frame.setVisible(true);
     addWindowListener(new WindowAdapter()
     {
       public void windowClosing(WindowEvent e)
@@ -84,7 +80,7 @@ public class TargetingSystem extends JFrame
 
     for(int i=0; i<3; i++) {
         targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
-                               randInt(enemy_y, enemy_y+enemy_height), target_diam));
+                               randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
     }
 
 
@@ -103,101 +99,63 @@ public class TargetingSystem extends JFrame
       if(b == e.BUTTON3) {
           refreshTargets();
       }
-      if(inrect(x,y,r1x1,r1y1,r1x2,r1y2)) color1 = Color.green;
-      else                                color1 = Color.red;
-      if(inrect(x,y,r2x1,r2y1,r2x2,r2y2)) color2 = Color.green;
-      else                                color2 = Color.blue;
+      
+      if(b == e.BUTTON1) {
+          //check if it hit target(s)
+          for(target t : targets) {
+              if(successful_hit(x, y, t.get_x(), t.get_y())) {
+                  t.setColor(targetHitColor);
+                  t.hit();
+              }
+          }
+          
+          //check if all targets have been hit?
+          if(all_targets_hit()) {
+              
+          }
+          
+      }
       requestFocus();
-      System.out.println("button "+b+" at x="+x+" y="+y); // debug print
+      //System.out.println("button "+b+" at x="+x+" y="+y); // debug print
       // panel.repaint();
       repaint();
     }
   }
 
-  public boolean inrect(int x, int y, int x1, int y1, int x2, int y2)
+  private boolean successful_hit(int shot_x, int shot_y, int t_x, int t_y)
   {
-    if(x<x1 || x>x2) return false;
-    if(y<y1 || y>y2) return false;
-    return true;
-  }
-
-  class MyJPanel extends JPanel
-  {
-    MyJPanel(){} // default, just to have "paint" dependent
-
-   public void paintComponent(Graphics g) {
-    super.paintComponent(g);
-    Graphics2D g2d = (Graphics2D)g;
-    
-    //enemy area
-    g.setColor(Color.black);
-    g2d.drawRect(enemy_x, enemy_y, enemy_width, enemy_height);
-    
-    //Ellipse2D.Double circle3 = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
-    //Ellipse2D.Double circle4 = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
-    
-    //draw targets (circles and rings)
-    g.setColor(targetColor);
-    for(target t : targets) {
-        Ellipse2D.Double circle = new Ellipse2D.Double(t.get_x()-target_radius, t.get_y()-target_radius, t.get_diam(), t.get_diam());
-        g2d.fill(circle); 
-    }
-   }
-    
-    
-    // return dimensions for sizing
-    public Dimension getPreferredSize()
-    {
-      return new Dimension(380, 380);
-    }
-  } // end MyJPanel
-
-  public static void main(String args[])
-  {
-    new TargetingSystem();
-  }
-  
-  private class bulletHole {
-      //graphics for bullethole
-  }
-  
-  private class target {
-      //graphics for targets
-      int center_x, center_y, center_diam;
-      int num_rings;
-      
-      
-      target(int cx, int cy, int cd) {
-        
-        center_x = cx;
-        center_y = cy;
-        center_diam = cd;
+      //calculate distance between shot and target
+      double distance = Math.sqrt(
+              (Math.pow((shot_x - t_x), 2) + Math.pow((shot_y - t_y),2)));
+      System.out.println("shot_x = "+shot_x); // debug print
+      System.out.println("shot_y = "+shot_y); // debug print
+      System.out.println("t_x = "+t_x); // debug print
+      System.out.println("t_y = "+t_y); // debug print
+      System.out.println("distance from target = "+distance); // debug print
+      if(distance <= max_distance) {
+          return true;
       }
       
-      public int get_x() {
-          return center_x;
-      }
-      
-      public int get_y() {
-          return center_y;
-      }
-      
-      public int get_diam() {
-          return center_diam;
-      }
-      
+      return false;
   }
   
-  private class enemy {
-      //graphics for enemies
+  
+  private boolean all_targets_hit() {
+      for(target t : targets) {
+          if(!t.is_hit()) return false;
+      }
+      return true;
   }
   
+  
+    
   
   private void refreshTargets() {
     targets.clear();
     for(int i=0; i<3; i++) {
+        //creates new UNHIT targets
         targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
-                               randInt(enemy_y, enemy_y+enemy_height), target_diam));
+                               randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
     }
   
   }
@@ -218,6 +176,103 @@ public class TargetingSystem extends JFrame
     return randomNum;
 }
 
-}
 
+
+
+
+  class MyJPanel extends JPanel
+  {
+    MyJPanel(){} // default, just to have "paint" dependent
+
+   public void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    Graphics2D g2d = (Graphics2D)g;
+    
+    //enemy area
+    g.setColor(Color.black);
+    g2d.drawRect(enemy_x, enemy_y, enemy_width, enemy_height);
+    
+    //draw targets (circles and rings)
+    for(target t : targets) {
+        g.setColor(t.getColor());
+        Ellipse2D.Double circle = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
+        //Ellipse2D.Double ring1 = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam() + target_radius, t.get_diam() + target_radius);
+        //Ellipse2D.Double ring2 = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
+        g2d.fill(circle);
+        //due to nature of drawing circles, 
+        //outer circle will not be centered around inner
+        //g2d.draw(ring1);
+    }
+   }
+    
+  } // end MyJPanel
+
+  public static void main(String args[])
+  {
+    new TargetingSystem();
+  }
+  
+  
+  //**//
+  private class bulletHole {
+      //graphics for bullethole
+      int center_x, center_y, center_diam;
+      Color color;
+  }//end class bulletHole
+  
+  //**//
+  private class target {
+      //graphics for targets
+      int center_x, center_y, center_diam;
+      int num_rings;
+      Color color;
+      boolean is_hit;
+      
+      
+      target(int cx, int cy, int cd, Color c) {
+        center_x = cx;
+        center_y = cy;
+        center_diam = cd;
+        color = c;
+        is_hit = false;
+      }
+      
+      //must subtract target_radius due to
+      //nature of circle drawing
+      private int get_x() {
+          return center_x - target_radius;
+      }
+      
+      private int get_y() {
+          return center_y - target_radius;
+      }
+      
+      private int get_diam() {
+          return center_diam;
+      }
+      
+      private Color getColor() {
+          return color;
+      }
+      
+      private void setColor(Color c) {
+          color = c;
+      }
+      
+      private boolean is_hit() {
+          return is_hit;
+      }
+      
+      private void hit() {
+          is_hit = true;
+      }
+  }//end class target
+  
+  
+  //**//
+  private class enemy {
+      //graphics for enemies
+  }//end class enemy
+
+}
 
