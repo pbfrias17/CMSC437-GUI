@@ -39,6 +39,7 @@ public class TargetingSystem extends JFrame
   int enemy_y = 50;
   int enemy_width = win_x - (2 * enemy_x);
   int enemy_height = 2 * enemy_x;
+  int bullet_diam = 10;
   int target_diam = 20;
   int target_radius = target_diam / 2;
   int max_distance = target_diam;
@@ -50,6 +51,7 @@ public class TargetingSystem extends JFrame
   Color targetHitColor = Color.red;
   Color bulletHole = Color.blue;
   List<target> targets = new ArrayList<>();
+  List<bulletHole> bullets = new ArrayList<>();
   
 
   TargetingSystem()
@@ -77,7 +79,6 @@ public class TargetingSystem extends JFrame
     setVisible(true);
     
     //initialize targets
-
     for(int i=0; i<3; i++) {
         targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
                                randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
@@ -97,10 +98,11 @@ public class TargetingSystem extends JFrame
       
       //just for example purposes
       if(b == e.BUTTON3) {
-          refreshTargets();
+          refreshAll();
       }
       
       if(b == e.BUTTON1) {
+          bullets.add(new bulletHole(x, y, bullet_diam));
           //check if it hit target(s)
           for(target t : targets) {
               if(successful_hit(x, y, t.get_x(), t.get_y())) {
@@ -108,12 +110,6 @@ public class TargetingSystem extends JFrame
                   t.hit();
               }
           }
-          
-          //check if all targets have been hit?
-          if(all_targets_hit()) {
-              
-          }
-          
       }
       requestFocus();
       //System.out.println("button "+b+" at x="+x+" y="+y); // debug print
@@ -124,33 +120,20 @@ public class TargetingSystem extends JFrame
 
   private boolean successful_hit(int shot_x, int shot_y, int t_x, int t_y)
   {
-      //calculate distance between shot and target
-      double distance = Math.sqrt(
-              (Math.pow((shot_x - t_x), 2) + Math.pow((shot_y - t_y),2)));
-      System.out.println("shot_x = "+shot_x); // debug print
-      System.out.println("shot_y = "+shot_y); // debug print
-      System.out.println("t_x = "+t_x); // debug print
-      System.out.println("t_y = "+t_y); // debug print
-      System.out.println("distance from target = "+distance); // debug print
-      if(distance <= max_distance) {
-          return true;
-      }
-      
-      return false;
-  }
-  
-  
-  private boolean all_targets_hit() {
-      for(target t : targets) {
-          if(!t.is_hit()) return false;
-      }
+      //is shot coordinate inside hitbox?
+      if(shot_x < t_x || shot_x > (t_x + target_diam))
+          return false;
+      if(shot_y < t_y || shot_y > (t_y + target_diam))
+          return false;
+
       return true;
   }
   
   
     
   
-  private void refreshTargets() {
+  private void refreshAll() {
+    bullets.clear();
     targets.clear();
     for(int i=0; i<3; i++) {
         //creates new UNHIT targets
@@ -158,6 +141,15 @@ public class TargetingSystem extends JFrame
                                randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
     }
   
+  }
+  
+  
+  private int game_over() {
+      //different types of game over
+      for(target t : targets) {
+          if(!t.is_hit()) return 0;
+      }
+      return 1;
   }
   
   
@@ -192,16 +184,28 @@ public class TargetingSystem extends JFrame
     g.setColor(Color.black);
     g2d.drawRect(enemy_x, enemy_y, enemy_width, enemy_height);
     
-    //draw targets (circles and rings)
+    //draw targets
     for(target t : targets) {
         g.setColor(t.getColor());
         Ellipse2D.Double circle = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
-        //Ellipse2D.Double ring1 = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam() + target_radius, t.get_diam() + target_radius);
-        //Ellipse2D.Double ring2 = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
         g2d.fill(circle);
-        //due to nature of drawing circles, 
-        //outer circle will not be centered around inner
-        //g2d.draw(ring1);
+        g.drawRect(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
+    }
+    
+    //draw bullet holes
+    for(bulletHole b : bullets) {
+        //translate circle so that it
+        //displays at correct coordinates
+        //double translation = Math.sqrt(2 * (Math.pow(bullet_diam / 2, 2)));
+        double translation = bullet_diam / 2;
+        g.setColor(bulletHole);
+        Ellipse2D.Double hole = new Ellipse2D.Double(b.get_x() - translation, b.get_y() - translation, b.get_diam(), b.get_diam());
+        g2d.fill(hole);
+    }
+    
+    if(game_over() !=  0) {
+        g.setColor(Color.black);
+        g.drawString("Game Over", 20, 50);
     }
    }
     
@@ -218,6 +222,24 @@ public class TargetingSystem extends JFrame
       //graphics for bullethole
       int center_x, center_y, center_diam;
       Color color;
+      
+      bulletHole(int x, int y, int diam) {
+          center_x = x;
+          center_y = y;
+          center_diam = diam;
+      }
+      
+      int get_x() {
+          return center_x;
+      }
+      
+      int get_y() {
+          return center_y;
+      }
+      
+      int get_diam() {
+          return center_diam;
+      }
   }//end class bulletHole
   
   //**//
@@ -240,11 +262,11 @@ public class TargetingSystem extends JFrame
       //must subtract target_radius due to
       //nature of circle drawing
       private int get_x() {
-          return center_x - target_radius;
+          return center_x;
       }
       
       private int get_y() {
-          return center_y - target_radius;
+          return center_y;
       }
       
       private int get_diam() {
