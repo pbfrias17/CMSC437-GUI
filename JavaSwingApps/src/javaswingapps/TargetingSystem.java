@@ -17,11 +17,18 @@ import java.awt.geom.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.*;
 import java.io.*;
 import javax.swing.*;
 
 public class TargetingSystem extends JFrame
 {
+    //splash screen
+    static SplashScreen mySplash;                   // instantiated by JVM we use it to get graphics
+    static Graphics2D splashGraphics;               // graphics context for overlay of the splash image
+    static Rectangle2D.Double splashTextArea;       // area where we draw the text
+    static Font font;                               // used to draw our text
+    
     MyJPanel panel;
     private JDesktopPane theDesktop;
     int x, y, b;
@@ -44,18 +51,107 @@ public class TargetingSystem extends JFrame
     int target_radius = target_diam / 2;
     int max_distance = target_diam;
 
-    Color color1 = Color.red;
-    Color color2 = Color.blue;
-
     Color targetColor = Color.green;
     Color targetHitColor = Color.red;
     Color bulletHole = Color.blue;
     List<target> targets = new ArrayList<>();
     List<bulletHole> bullets = new ArrayList<>();
 
+    private static void splash(int sleep_duration)
+    {
+        // the splash screen object is created by the JVM, if it is displaying a splash image
+        
+        mySplash = SplashScreen.getSplashScreen();
+        // if there are any problems displaying the splash image
+        // the call to getSplashScreen will returned null
+
+        if (mySplash != null)
+        {
+            // get the size of the image now being displayed
+            Dimension ssDim = mySplash.getSize();
+            int height = ssDim.height;
+            int width = ssDim.width;
+
+            // stake out some area for our status information
+            splashTextArea = new Rectangle2D.Double(0, height*.11, width, height*.25);
+           
+
+            // create the Graphics environment for drawing status info
+            splashGraphics = mySplash.createGraphics();
+            font = new Font("Courier", Font.PLAIN, 100);
+            splashGraphics.setFont(font);
+
+            // initialize the status info
+            splashText("R U RDY?");
+            try {
+                Thread.sleep(sleep_duration);
+            } catch(InterruptedException ex) {
+                //do nothing
+            }
+            
+            
+        }
+    }
+    /**
+     * Display text in status area of Splash.  Note: no validation it will fit.
+     * @param str - text to be displayed
+     */
+    public static void splashText(String str)
+    {
+        if (mySplash != null && mySplash.isVisible())
+        {   // important to check here so no other methods need to know if there
+            // really is a Splash being displayed
+
+            // erase the last status text
+            splashGraphics.setPaint(Color.LIGHT_GRAY);
+            //splashGraphics.fill(splashTextArea);
+
+            // draw the text
+            splashGraphics.setPaint(Color.RED);
+            splashGraphics.drawString(str, (int)(splashTextArea.getX() + splashTextArea.getWidth() * .30),(int)(splashTextArea.getY() + 15));
+
+            // make sure it's displayed
+            mySplash.update();
+        }
+    }
+    
+    
 
     TargetingSystem() {
+        
+        //show splash screen
+        splash(100);
+        
+        double t1, t2;
+        double waste = 0.0;
+        
+        System.out.println("time_of_day from Java");
 
+        System.out.println();    
+        GregorianCalendar now = new GregorianCalendar(); // now
+        System.out.println(now.toString()); // whole mess
+
+        System.out.println();    
+        System.out.println(now.get(GregorianCalendar.MONTH)+"/"+
+                           now.get(GregorianCalendar.DATE)+"/"+
+                           now.get(GregorianCalendar.YEAR));
+        System.out.println(now.get(GregorianCalendar.HOUR)+":"+
+                           now.get(GregorianCalendar.MINUTE)+":"+
+                           now.get(GregorianCalendar.SECOND));
+        System.out.println(now.get(GregorianCalendar.MILLISECOND)+
+                           " milliseconds");
+
+        System.out.println(); // get time, waste time, get time    
+        t1 = System.currentTimeMillis();
+        System.out.println("t1="+t1);
+        for(int i=0; i<100000; i++)
+          waste = waste + Math.sin(1.723)*Math.cos(1.113)/394.247;
+        if(waste>0.0) waste = 0.0;
+        t2 = System.currentTimeMillis();
+        System.out.println("t2="+t2+"  t2-t1="+(t2-t1)+" milliseconds");
+        
+        
+        //start application
         setTitle("Targeting System");
         setSize(win_x,win_y);
         setBackground(Color.white);
@@ -128,7 +224,7 @@ public class TargetingSystem extends JFrame
         int targ_x = t_x + target_radius;
         int targ_y = t_y + target_radius;
         double distance = Math.sqrt(Math.pow(shot_x - targ_x, 2) + Math.pow(shot_y - targ_y, 2));
-        System.out.println("distance = "+distance); // debug print
+        //System.out.println("distance = "+distance); // debug print
 
         if(distance <= .5 * (target_diam + target_radius))
             return true;
@@ -184,6 +280,9 @@ public class TargetingSystem extends JFrame
 
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
+            
+            //showTime();
+            
             Graphics2D g2d = (Graphics2D)g;
 
             //enemy area
@@ -211,19 +310,27 @@ public class TargetingSystem extends JFrame
                 g2d.fill(hole);
             }
 
-            if(game_over() !=  0) {
+            switch(game_over()) {
+                case(1):
+                    g.setColor(Color.black);
+                    Font font = new Font("Helvetica", Font.PLAIN, 96);
+                    g.setFont(font);
+                    g.drawString("You Rule!!", 280, 700);
+                    
+                default:
+                    break;
+            }
+            
+            if(game_over() != 0) {
                 g.setColor(Color.black);
-                g.drawString("Game Over", 20, 50);
+                Font font = new Font("Courier", Font.PLAIN, 20);
+                g.setFont(font);
+                g.drawString("Right Click to play again!", 400, 740);
             }
         }
 
     } // end MyJPanel
-
-    public static void main(String args[]) {
-        new TargetingSystem();
-    }
-
-
+    
     //**//
     private class bulletHole {
         //graphics for bullethole
@@ -303,5 +410,14 @@ public class TargetingSystem extends JFrame
         //graphics for enemies
     }//end class enemy
 
+    
+    
+    
+    public static void main(String args[]) {
+        new TargetingSystem();
+    }
+
+
+    
 }
 
