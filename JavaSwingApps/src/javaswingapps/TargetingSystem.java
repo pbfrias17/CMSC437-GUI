@@ -39,8 +39,8 @@ public class TargetingSystem extends JFrame
   int enemy_y = 50;
   int enemy_width = win_x - (2 * enemy_x);
   int enemy_height = 2 * enemy_x;
-  int bullet_diam = 10;
-  int target_diam = 20;
+  int bullet_diam = 20;
+  int target_diam = 40;
   int target_radius = target_diam / 2;
   int max_distance = target_diam;
   
@@ -121,12 +121,22 @@ public class TargetingSystem extends JFrame
   private boolean successful_hit(int shot_x, int shot_y, int t_x, int t_y)
   {
       //is shot coordinate inside hitbox?
-      if(shot_x < t_x || shot_x > (t_x + target_diam))
+      /*if(shot_x < t_x || shot_x > (t_x + target_diam))
           return false;
       if(shot_y < t_y || shot_y > (t_y + target_diam))
           return false;
+   
+      return true;*/
+      
+      int targ_x = t_x + target_radius;
+      int targ_y = t_y + target_radius;
+      double distance = Math.sqrt(Math.pow(shot_x - targ_x, 2) + Math.pow(shot_y - targ_y, 2));
+      System.out.println("distance = "+distance); // debug print
 
-      return true;
+      if(distance <= .5 * (target_diam + target_radius))
+          return true;
+      return false;
+      //double distance = 0;
   }
   
   
@@ -187,9 +197,11 @@ public class TargetingSystem extends JFrame
     //draw targets
     for(target t : targets) {
         g.setColor(t.getColor());
-        Ellipse2D.Double circle = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
-        g2d.fill(circle);
-        g.drawRect(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
+        Ellipse2D.Double targ = new Ellipse2D.Double(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
+        g2d.fill(targ);
+        //g.drawRect(t.get_x(), t.get_y(), t.get_diam(), t.get_diam());
+        Ellipse2D.Double hitCircle = new Ellipse2D.Double(t.get_x() - target_radius / 2, t.get_y() - target_radius / 2, t.get_diam() + target_radius, t.get_diam() + target_radius);
+        g2d.draw(hitCircle);
     }
     
     //draw bullet holes
