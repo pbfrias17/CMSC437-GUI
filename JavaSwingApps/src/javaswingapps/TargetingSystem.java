@@ -34,17 +34,13 @@ public class TargetingSystem extends JFrame
     int x, y, b;
     int win_x = 1000;
     int win_y = 1050;
-    int r1x1 = 100;  // red rectangle
-    int r1y1 = 120;
-    int r1x2 = 200;
-    int r1y2= 250;
-    int r2x1 = 180;  // blue rectangle
-    int r2y1 = 220;
-    int r2x2 = 300;
-    int r2y2= 350;
+    int clock_x = 250;
+    int clock_y = 700;
+    int clock_width = win_x - (2 * clock_x);
+    int clock_height = 175;
     int enemy_x = 250;
     int enemy_y = 50;
-    int enemy_width = win_x - (2 * enemy_x);
+    int enemy_width = clock_width;
     int enemy_height = 2 * enemy_x;
     int bullet_diam = 20;
     int target_diam = 40;
@@ -115,41 +111,11 @@ public class TargetingSystem extends JFrame
         }
     }
     
-    
 
     TargetingSystem() {
         
         //show splash screen
         splash(100);
-        
-        double t1, t2;
-        double waste = 0.0;
-        
-        System.out.println("time_of_day from Java");
-
-        System.out.println();    
-        GregorianCalendar now = new GregorianCalendar(); // now
-        System.out.println(now.toString()); // whole mess
-
-        System.out.println();    
-        System.out.println(now.get(GregorianCalendar.MONTH)+"/"+
-                           now.get(GregorianCalendar.DATE)+"/"+
-                           now.get(GregorianCalendar.YEAR));
-        System.out.println(now.get(GregorianCalendar.HOUR)+":"+
-                           now.get(GregorianCalendar.MINUTE)+":"+
-                           now.get(GregorianCalendar.SECOND));
-        System.out.println(now.get(GregorianCalendar.MILLISECOND)+
-                           " milliseconds");
-
-        System.out.println(); // get time, waste time, get time    
-        t1 = System.currentTimeMillis();
-        System.out.println("t1="+t1);
-        for(int i=0; i<100000; i++)
-          waste = waste + Math.sin(1.723)*Math.cos(1.113)/394.247;
-        if(waste>0.0) waste = 0.0;
-        t2 = System.currentTimeMillis();
-        System.out.println("t2="+t2+"  t2-t1="+(t2-t1)+" milliseconds");
-        
         
         //start application
         setTitle("Targeting System");
@@ -280,11 +246,16 @@ public class TargetingSystem extends JFrame
 
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-            
-            //showTime();
-            
             Graphics2D g2d = (Graphics2D)g;
 
+            //clock
+            Clock c = new Clock();
+            g.setColor(Color.black);
+            g2d.drawRect(clock_x, clock_y, clock_width, clock_height);
+            Font fontClock = new Font("Courier", Font.PLAIN, 20);
+            g.setFont(fontClock);
+            g.drawString("Timer", clock_x, clock_y + clock_height);
+            
             //enemy area
             g.setColor(Color.black);
             g2d.drawRect(enemy_x, enemy_y, enemy_width, enemy_height);
@@ -299,7 +270,7 @@ public class TargetingSystem extends JFrame
                 g2d.draw(hitCircle);
             }
 
-      //draw bullet holes
+            //draw bullet holes
             for(bulletHole b : bullets) {
                 //translate circle so that it
                 //displays at correct coordinates
@@ -313,8 +284,8 @@ public class TargetingSystem extends JFrame
             switch(game_over()) {
                 case(1):
                     g.setColor(Color.black);
-                    Font font = new Font("Helvetica", Font.PLAIN, 96);
-                    g.setFont(font);
+                    Font fontGameOver = new Font("Helvetica", Font.PLAIN, 96);
+                    g.setFont(fontGameOver);
                     g.drawString("You Rule!!", 280, 700);
                     
                 default:
@@ -323,8 +294,8 @@ public class TargetingSystem extends JFrame
             
             if(game_over() != 0) {
                 g.setColor(Color.black);
-                Font font = new Font("Courier", Font.PLAIN, 20);
-                g.setFont(font);
+                Font fontPlayAgain = new Font("Courier", Font.PLAIN, 20);
+                g.setFont(fontPlayAgain);
                 g.drawString("Right Click to play again!", 400, 740);
             }
         }
