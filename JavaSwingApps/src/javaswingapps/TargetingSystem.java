@@ -20,6 +20,7 @@ import java.util.Random;
 import java.util.*;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.Timer;
 
 public class TargetingSystem extends JFrame
 {
@@ -32,6 +33,8 @@ public class TargetingSystem extends JFrame
     MyJPanel panel;
     private JDesktopPane theDesktop;
     int x, y, b;
+    Clock gameClock;
+    Timer t;
     int win_x = 1000;
     int win_y = 1050;
     int clock_x = 250;
@@ -117,6 +120,10 @@ public class TargetingSystem extends JFrame
         //show splash screen
         splash(100);
         
+        //clock
+        gameClock = new Clock();
+        t = new Timer(500, updateClockAction);
+        t.start();
         //start application
         setTitle("Targeting System");
         setSize(win_x,win_y);
@@ -148,6 +155,13 @@ public class TargetingSystem extends JFrame
 
 
     }
+        
+    ActionListener updateClockAction = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            gameClock.setTime(System.currentTimeMillis());
+            repaint();
+        }
+    };
 
     class mousePressHandler extends MouseAdapter {
         public void mousePressed (MouseEvent e) {
@@ -171,22 +185,12 @@ public class TargetingSystem extends JFrame
                 }
             }
             requestFocus();
-            //System.out.println("button "+b+" at x="+x+" y="+y); // debug print
-            // panel.repaint();
             repaint();
         }
     }
 
     private boolean successful_hit(int shot_x, int shot_y, int t_x, int t_y)
     {
-        //is shot coordinate inside hitbox?
-        /*if(shot_x < t_x || shot_x > (t_x + target_diam))
-            return false;
-        if(shot_y < t_y || shot_y > (t_y + target_diam))
-            return false;
-
-        return true;*/
-
         int targ_x = t_x + target_radius;
         int targ_y = t_y + target_radius;
         double distance = Math.sqrt(Math.pow(shot_x - targ_x, 2) + Math.pow(shot_y - targ_y, 2));
@@ -248,13 +252,12 @@ public class TargetingSystem extends JFrame
             super.paintComponent(g);
             Graphics2D g2d = (Graphics2D)g;
 
-            //clock
-            Clock c = new Clock();
+
             g.setColor(Color.black);
             g2d.drawRect(clock_x, clock_y, clock_width, clock_height);
             Font fontClock = new Font("Courier", Font.PLAIN, 20);
             g.setFont(fontClock);
-            g.drawString("Timer", clock_x, clock_y + clock_height);
+            g.drawString(Long.toString(gameClock.displayTime()), clock_x, clock_y + clock_height);
             
             //enemy area
             g.setColor(Color.black);

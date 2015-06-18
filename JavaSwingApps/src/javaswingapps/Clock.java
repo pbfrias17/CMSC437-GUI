@@ -5,6 +5,7 @@
  */
 package javaswingapps;
 
+import java.util.*;
 import java.util.GregorianCalendar;
 import javax.swing.Timer;
 import java.awt.event.*;
@@ -14,29 +15,24 @@ import java.awt.event.*;
  * @author Paolo
  */
 public class Clock {
-        double t1, t2;
-        double waste = 0.0;
-        Timer t;
-        String current_time;
+        long current_time = System.currentTimeMillis();
+        GregorianCalendar cal = new GregorianCalendar();
         
         Clock() {
-            Timer timer = new Timer(1000, new MyTimerActionListener());
-
-            timer.start();
-            try {
-              Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
-            timer.stop();
+            System.out.println("MADE A CLOCK!");
         }
 
         
-        class MyTimerActionListener implements ActionListener {
-            public void actionPerformed(ActionEvent e) {
+        void setTime(long time) {
+            current_time = time;
+            System.out.println("time = "+time);
 
-                System.out.println("asdf");
-
-            }
+        }
+        
+        long displayTime() {
+            System.out.println("Returning time...");
+            return current_time;
+            
         }
 
     }
