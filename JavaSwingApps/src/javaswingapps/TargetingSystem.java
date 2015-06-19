@@ -18,9 +18,14 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.*;
-import java.io.*;
 import javax.swing.*;
 import javax.swing.Timer;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
 
 public class TargetingSystem extends JFrame
 {
@@ -31,6 +36,7 @@ public class TargetingSystem extends JFrame
     static Font font;                               // used to draw our text
     
     MyJPanel panel;
+    ImagePanel enemy_panel;
     private JDesktopPane theDesktop;
     int x, y, b;
     Clock gameClock;
@@ -49,6 +55,10 @@ public class TargetingSystem extends JFrame
     int target_diam = 40;
     int target_radius = target_diam / 2;
     int max_distance = target_diam;
+    int current_round = 0;
+    int initial_round_duration = 5000;
+    int round_duration = initial_round_duration;
+    long current_duration;
 
     Color targetColor = Color.green;
     Color targetHitColor = Color.red;
@@ -58,12 +68,13 @@ public class TargetingSystem extends JFrame
 
     
         
-    ActionListener updateClockAction = new ActionListener() {
+    ActionListener updateClock = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             //eventually change this to a countdown timer
             Date date = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-            gameClock.setTime(sdf.format(date));
+            //gameClock.setTime(sdf.format(date));
+            gameClock.setTime(current_duration - System.currentTimeMillis());
             repaint();
         }
     };
@@ -76,7 +87,7 @@ public class TargetingSystem extends JFrame
 
             //just for example purposes
             if(b == e.BUTTON3) {
-                refreshAll();
+                refreshAll(true);
             }
 
             if(b == e.BUTTON1) {
@@ -109,7 +120,7 @@ public class TargetingSystem extends JFrame
             g2d.drawRect(clock_x, clock_y, clock_width, clock_height);
             Font fontClock = new Font("Courier", Font.PLAIN, 130);
             g.setFont(fontClock);
-            g.drawString(gameClock.displayTime(), clock_x, clock_y + clock_height);
+            g.drawString(Long.toString(gameClock.displayTime()), clock_x, clock_y + clock_height);
             
             //enemy area
             g.setColor(Color.black);
@@ -136,26 +147,58 @@ public class TargetingSystem extends JFrame
                 g2d.fill(hole);
             }
 
-            switch(game_over()) {
+            //end of game
+            //... or next round
+            switch(end_round()) {
                 case(1):
                     g.setColor(Color.black);
-                    Font fontGameOver = new Font("Helvetica", Font.PLAIN, 120);
-                    g.setFont(fontGameOver);
-                    g.drawString("You Rule!!", 225, 350);
+                    g.setFont(new Font("Narkisim", Font.PLAIN, 150));
+                    current_round++;
+                    g.drawString("Round "+current_round, 253, 350);
+                    refreshAll(false);
+                    break;
+                
+                case(2):
+                    g.setColor(Color.black);
+                    g.setFont(new Font("Narkisim", Font.PLAIN, 135));
+                    g.drawString("You Lose!", 240, 350);
+                    
+                    g.setColor(Color.black);
+                    Font fontPlayAgain = new Font("Mool Boran", Font.PLAIN, 20);
+                    g.setFont(fontPlayAgain);
+                    g.drawString("Right Click to play again!", 400, 400);
+                    //show score
+                    //then prompt to replay
+                    break;
                     
                 default:
                     break;
             }
-            
-            if(game_over() != 0) {
-                g.setColor(Color.black);
-                Font fontPlayAgain = new Font("Courier", Font.PLAIN, 20);
-                g.setFont(fontPlayAgain);
-                g.drawString("Right Click to play again!", 400, 400);
-            }
         }
 
     } // end MyJPanel
+    
+    public class ImagePanel extends JPanel{
+
+        private BufferedImage image;
+
+        public ImagePanel() {
+           try {                
+              image = ImageIO.read(new File("spongebob.jpg"));
+           } catch (IOException ex) {
+                // handle exception...
+           }
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.drawImage(image, 0, 0, null); // see javadoc for more info on the parameters            
+        }
+
+    } //end ImagePanel
+    
+    
     
     //**//
     private class bulletHole {
@@ -305,8 +348,9 @@ public class TargetingSystem extends JFrame
         
         //clock
         gameClock = new Clock();
-        t = new Timer(500, updateClockAction);
+        t = new Timer(1, updateClock);
         t.start();
+        current_duration = System.currentTimeMillis() + initial_round_duration;
         
         //start application
         setTitle("Targeting System");
@@ -328,6 +372,9 @@ public class TargetingSystem extends JFrame
               System.exit(0);
             }
         });
+        
+        enemy_panel = new ImagePanel();
+        //container.add(enemy_panel, BorderLayout.CENTER);
         setVisible(true);
 
         //initialize targets
@@ -341,6 +388,11 @@ public class TargetingSystem extends JFrame
     }
     
     
+    void set_current_duration(long dur) {
+        current_duration = dur;
+        if(dur < 2000)
+            current_duration = 2000;
+    }
     
     private boolean successful_hit(int shot_x, int shot_y, int t_x, int t_y)
     {
@@ -358,7 +410,7 @@ public class TargetingSystem extends JFrame
 
 
 
-    private void refreshAll() {
+    private void refreshAll(boolean start_over) {
         bullets.clear();
         targets.clear();
         for(int i=0; i<3; i++) {
@@ -366,15 +418,30 @@ public class TargetingSystem extends JFrame
             targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
                                    randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
         }
+        round_duration -= 1000;
+        set_current_duration(System.currentTimeMillis() + round_duration);
+        if(start_over) {
+            current_round = 0;
+            round_duration = initial_round_duration;
+            set_current_duration(System.currentTimeMillis() + initial_round_duration);
+        }
 
     }
 
 
-    private int game_over() {
-        //different types of game over
+    private int end_round() {
+        //different types of end_round
+        //0 = still playing current round
+        //1 = new round
+        //2 = game over
+        if(gameClock.displayTime() <= 0) {
+            return 2;
+        }
+        
         for(target t : targets) {
             if(!t.is_hit()) return 0;
         }
+        
         return 1;
     }
     

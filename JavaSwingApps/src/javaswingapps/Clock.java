@@ -10,6 +10,7 @@ import java.text.*;
 import java.util.GregorianCalendar;
 import javax.swing.Timer;
 import java.awt.event.*;
+import java.awt.GraphicsEnvironment;
 
 /**
  *
@@ -18,19 +19,30 @@ import java.awt.event.*;
 public class Clock {
         String current_time;
         GregorianCalendar cal = new GregorianCalendar();
+        Long duration;
 
         
         Clock() {
+/*
+            String fonts[] = 
+                GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
 
+            for ( int i = 0; i < fonts.length; i++ )
+            {
+              System.out.println(fonts[i]);
+            }*/
         }
 
+            
+          
+
         
-        void setTime(String time) {
-            current_time = time;
+        void setTime(long millis) {
+            duration = millis;
         }
         
-        String displayTime() {
-            return current_time;
+        Long displayTime() {
+            return duration;
             
         }
 
