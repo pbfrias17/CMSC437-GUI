@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
+import java.net.URL;
 
 public class TargetingSystem extends JFrame
 {
@@ -36,11 +37,13 @@ public class TargetingSystem extends JFrame
     static Font font;                               // used to draw our text
     
     MyJPanel panel;
-    ImagePanel enemy_panel;
     private JDesktopPane theDesktop;
     int x, y, b;
     Clock gameClock;
     Timer t;
+    BufferedImage enemyImage;
+    int num_enemies = 9;
+    List<Integer> enemies_seen = new ArrayList<Integer>();
     int win_x = 1000;
     int win_y = 1050;
     int clock_x = 250;
@@ -56,7 +59,7 @@ public class TargetingSystem extends JFrame
     int target_radius = target_diam / 2;
     int max_distance = target_diam;
     int current_round = 0;
-    int initial_round_duration = 5000;
+    int initial_round_duration = 15000;
     int round_duration = initial_round_duration;
     long current_duration;
 
@@ -123,9 +126,17 @@ public class TargetingSystem extends JFrame
             g.drawString(Long.toString(gameClock.displayTime()), clock_x, clock_y + clock_height);
             
             //enemy area
-            g.setColor(Color.black);
-            g2d.drawRect(enemy_x, enemy_y, enemy_width, enemy_height);
-
+            //g.setColor(Color.black);
+            //g2d.drawRect(enemy_x, enemy_y, enemy_width, enemy_height);
+            if(enemyImage != null) {
+                g2d.drawImage(enemyImage,
+                    enemy_x, enemy_y, enemy_width+enemy_x, enemy_height+enemy_y,
+                    0, 0, enemyImage.getWidth(null),
+                    enemyImage.getHeight(null), null);             
+            } else {
+                System.out.println("Enemy image is null");
+            }
+            
             //draw targets
             for(target t : targets) {
                 g.setColor(t.getColor());
@@ -177,27 +188,6 @@ public class TargetingSystem extends JFrame
         }
 
     } // end MyJPanel
-    
-    public class ImagePanel extends JPanel{
-
-        private BufferedImage image;
-
-        public ImagePanel() {
-           try {                
-              image = ImageIO.read(new File("spongebob.jpg"));
-           } catch (IOException ex) {
-                // handle exception...
-           }
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            g.drawImage(image, 0, 0, null); // see javadoc for more info on the parameters            
-        }
-
-    } //end ImagePanel
-    
     
     
     //**//
@@ -272,13 +262,6 @@ public class TargetingSystem extends JFrame
             is_hit = true;
         }
     }//end class target
-  
-  
-    //**//
-    private class enemy {
-        //graphics for enemies
-    }//end class enemy
-
     
 
     
@@ -372,19 +355,29 @@ public class TargetingSystem extends JFrame
               System.exit(0);
             }
         });
-        
-        enemy_panel = new ImagePanel();
+       
         //container.add(enemy_panel, BorderLayout.CENTER);
         setVisible(true);
 
         //initialize targets
-        for(int i=0; i<3; i++) {
-            targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
-                                   randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
+        refreshAll(true);
+
+
+
+    }
+    
+    
+    private BufferedImage loadImage(int enemy_num) {
+        String imgFileName = "enemyImages/enemy"+enemy_num+".png";
+        URL url = TargetingSystem.class.getResource(imgFileName);
+        BufferedImage img = null;
+        try {
+            img =  ImageIO.read(url);
+        } catch (Exception e) {
         }
-
-
-
+        System.out.println("Successfully loaded "+imgFileName);
+        enemies_seen.add(enemy_num);
+        return img;
     }
     
     
@@ -399,12 +392,10 @@ public class TargetingSystem extends JFrame
         int targ_x = t_x + target_radius;
         int targ_y = t_y + target_radius;
         double distance = Math.sqrt(Math.pow(shot_x - targ_x, 2) + Math.pow(shot_y - targ_y, 2));
-        //System.out.println("distance = "+distance); // debug print
 
         if(distance <= .5 * (target_diam + target_radius))
             return true;
         return false;
-        //double distance = 0;
     }
 
 
@@ -413,14 +404,33 @@ public class TargetingSystem extends JFrame
     private void refreshAll(boolean start_over) {
         bullets.clear();
         targets.clear();
+        
+        //load random enemy image
+        //probably the worst way to do this...
+        if(enemies_seen.size() < num_enemies) {
+            int currentEnemy = randInt(1, num_enemies);
+            while(Arrays.asList(enemies_seen).contains(currentEnemy)) {
+                currentEnemy = randInt(1, num_enemies);
+                System.out.println("I already seen dis monster doe");
+            }
+            enemyImage = loadImage(currentEnemy);
+            //enemies_seen.add(currentEnemy);
+            System.out.println(enemies_seen.size()+" < "+num_enemies);            
+        } else {
+            enemyImage = null;
+            System.out.println(enemies_seen.size()+" >= "+num_enemies);
+        }
+        
+        
+        //creates new UNHIT targets
         for(int i=0; i<3; i++) {
-            //creates new UNHIT targets
             targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
                                    randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
         }
         round_duration -= 1000;
         set_current_duration(System.currentTimeMillis() + round_duration);
         if(start_over) {
+            enemies_seen.clear();
             current_round = 0;
             round_duration = initial_round_duration;
             set_current_duration(System.currentTimeMillis() + initial_round_duration);
