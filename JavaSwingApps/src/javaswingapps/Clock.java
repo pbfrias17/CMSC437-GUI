@@ -6,6 +6,7 @@
 package javaswingapps;
 
 import java.util.*;
+import java.text.*;
 import java.util.GregorianCalendar;
 import javax.swing.Timer;
 import java.awt.event.*;
@@ -15,22 +16,20 @@ import java.awt.event.*;
  * @author Paolo
  */
 public class Clock {
-        long current_time = System.currentTimeMillis();
+        String current_time;
         GregorianCalendar cal = new GregorianCalendar();
+
         
         Clock() {
-            System.out.println("MADE A CLOCK!");
+
         }
 
         
-        void setTime(long time) {
+        void setTime(String time) {
             current_time = time;
-            System.out.println("time = "+time);
-
         }
         
-        long displayTime() {
-            System.out.println("Returning time...");
+        String displayTime() {
             return current_time;
             
         }

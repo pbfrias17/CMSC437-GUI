@@ -56,109 +56,14 @@ public class TargetingSystem extends JFrame
     List<target> targets = new ArrayList<>();
     List<bulletHole> bullets = new ArrayList<>();
 
-    private static void splash(int sleep_duration)
-    {
-        // the splash screen object is created by the JVM, if it is displaying a splash image
-        
-        mySplash = SplashScreen.getSplashScreen();
-        // if there are any problems displaying the splash image
-        // the call to getSplashScreen will returned null
-
-        if (mySplash != null)
-        {
-            // get the size of the image now being displayed
-            Dimension ssDim = mySplash.getSize();
-            int height = ssDim.height;
-            int width = ssDim.width;
-
-            // stake out some area for our status information
-            splashTextArea = new Rectangle2D.Double(0, height*.11, width, height*.25);
-           
-
-            // create the Graphics environment for drawing status info
-            splashGraphics = mySplash.createGraphics();
-            font = new Font("Courier", Font.PLAIN, 100);
-            splashGraphics.setFont(font);
-
-            // initialize the status info
-            splashText("R U RDY?");
-            try {
-                Thread.sleep(sleep_duration);
-            } catch(InterruptedException ex) {
-                //do nothing
-            }
-            
-            
-        }
-    }
-    /**
-     * Display text in status area of Splash.  Note: no validation it will fit.
-     * @param str - text to be displayed
-     */
-    public static void splashText(String str)
-    {
-        if (mySplash != null && mySplash.isVisible())
-        {   // important to check here so no other methods need to know if there
-            // really is a Splash being displayed
-
-            // erase the last status text
-            splashGraphics.setPaint(Color.LIGHT_GRAY);
-            //splashGraphics.fill(splashTextArea);
-
-            // draw the text
-            splashGraphics.setPaint(Color.RED);
-            splashGraphics.drawString(str, (int)(splashTextArea.getX() + splashTextArea.getWidth() * .30),(int)(splashTextArea.getY() + 15));
-
-            // make sure it's displayed
-            mySplash.update();
-        }
-    }
     
-
-    TargetingSystem() {
-        
-        //show splash screen
-        splash(100);
-        
-        //clock
-        gameClock = new Clock();
-        t = new Timer(500, updateClockAction);
-        t.start();
-        //start application
-        setTitle("Targeting System");
-        setSize(win_x,win_y);
-        setBackground(Color.white);
-        setForeground(Color.black);
-
-        theDesktop = new JDesktopPane();
-        getContentPane().add(theDesktop);
-        Container container = getContentPane();
-        panel = new MyJPanel();
-        container.add(panel, BorderLayout.CENTER);
-        panel.addMouseListener (new mousePressHandler());
-        //frame.setVisible(true);
-        addWindowListener(new WindowAdapter()
-        {
-            public void windowClosing(WindowEvent e)
-            {
-              System.exit(0);
-            }
-        });
-        setVisible(true);
-
-        //initialize targets
-        for(int i=0; i<3; i++) {
-            targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
-                                   randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
-        }
-
-
-
-    }
         
     ActionListener updateClockAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-            gameClock.setTime(System.currentTimeMillis());
+            //eventually change this to a countdown timer
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+            gameClock.setTime(sdf.format(date));
             repaint();
         }
     };
@@ -189,60 +94,7 @@ public class TargetingSystem extends JFrame
         }
     }
 
-    private boolean successful_hit(int shot_x, int shot_y, int t_x, int t_y)
-    {
-        int targ_x = t_x + target_radius;
-        int targ_y = t_y + target_radius;
-        double distance = Math.sqrt(Math.pow(shot_x - targ_x, 2) + Math.pow(shot_y - targ_y, 2));
-        //System.out.println("distance = "+distance); // debug print
-
-        if(distance <= .5 * (target_diam + target_radius))
-            return true;
-        return false;
-        //double distance = 0;
-    }
-
-
-
-
-    private void refreshAll() {
-        bullets.clear();
-        targets.clear();
-        for(int i=0; i<3; i++) {
-            //creates new UNHIT targets
-            targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
-                                   randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
-        }
-
-    }
-
-
-    private int game_over() {
-        //different types of game over
-        for(target t : targets) {
-            if(!t.is_hit()) return 0;
-        }
-        return 1;
-    }
-
-
-    //for future's sake, this shouldn't really
-    //be inside of the class definition
-    public static int randInt(int min, int max) {
-
-        // NOTE: Usually this should be a field rather than a method
-        // variable so that it is not re-seeded every call.
-        Random rand = new Random();
-
-        // nextInt is normally exclusive of the top value,
-        // so add 1 to make it inclusive
-        int randomNum = rand.nextInt((max - min) + 1) + min;
-
-        return randomNum;
-    }
-
-
-
+    
 
 
     class MyJPanel extends JPanel {
@@ -255,9 +107,9 @@ public class TargetingSystem extends JFrame
 
             g.setColor(Color.black);
             g2d.drawRect(clock_x, clock_y, clock_width, clock_height);
-            Font fontClock = new Font("Courier", Font.PLAIN, 20);
+            Font fontClock = new Font("Courier", Font.PLAIN, 130);
             g.setFont(fontClock);
-            g.drawString(Long.toString(gameClock.displayTime()), clock_x, clock_y + clock_height);
+            g.drawString(gameClock.displayTime(), clock_x, clock_y + clock_height);
             
             //enemy area
             g.setColor(Color.black);
@@ -287,9 +139,9 @@ public class TargetingSystem extends JFrame
             switch(game_over()) {
                 case(1):
                     g.setColor(Color.black);
-                    Font fontGameOver = new Font("Helvetica", Font.PLAIN, 96);
+                    Font fontGameOver = new Font("Helvetica", Font.PLAIN, 120);
                     g.setFont(fontGameOver);
-                    g.drawString("You Rule!!", 280, 700);
+                    g.drawString("You Rule!!", 225, 350);
                     
                 default:
                     break;
@@ -299,7 +151,7 @@ public class TargetingSystem extends JFrame
                 g.setColor(Color.black);
                 Font fontPlayAgain = new Font("Courier", Font.PLAIN, 20);
                 g.setFont(fontPlayAgain);
-                g.drawString("Right Click to play again!", 400, 740);
+                g.drawString("Right Click to play again!", 400, 400);
             }
         }
 
@@ -385,13 +237,171 @@ public class TargetingSystem extends JFrame
     }//end class enemy
 
     
+
     
+    private static void splash(int sleep_duration)
+    {
+        // the splash screen object is created by the JVM, if it is displaying a splash image
+        
+        mySplash = SplashScreen.getSplashScreen();
+        // if there are any problems displaying the splash image
+        // the call to getSplashScreen will returned null
+
+        if (mySplash != null)
+        {
+            // get the size of the image now being displayed
+            Dimension ssDim = mySplash.getSize();
+            int height = ssDim.height;
+            int width = ssDim.width;
+
+            // stake out some area for our status information
+            splashTextArea = new Rectangle2D.Double(0, height*.11, width, height*.25);
+           
+
+            // create the Graphics environment for drawing status info
+            splashGraphics = mySplash.createGraphics();
+            font = new Font("Courier", Font.PLAIN, 100);
+            splashGraphics.setFont(font);
+
+            // initialize the status info
+            splashText("R U RDY?");
+            try {
+                Thread.sleep(sleep_duration);
+            } catch(InterruptedException ex) {
+                //do nothing
+            }
+            
+            
+        }
+    }
+    /**
+     * Display text in status area of Splash.  Note: no validation it will fit.
+     * @param str - text to be displayed
+     */
+    public static void splashText(String str)
+    {
+        if (mySplash != null && mySplash.isVisible())
+        {   // important to check here so no other methods need to know if there
+            // really is a Splash being displayed
+
+            // erase the last status text
+            splashGraphics.setPaint(Color.LIGHT_GRAY);
+            //splashGraphics.fill(splashTextArea);
+
+            // draw the text
+            splashGraphics.setPaint(Color.RED);
+            splashGraphics.drawString(str, (int)(splashTextArea.getX() + splashTextArea.getWidth() * .30),(int)(splashTextArea.getY() + 15));
+
+            // make sure it's displayed
+            mySplash.update();
+        }
+    }
+    
+
+    TargetingSystem() {
+        
+        //show splash screen
+        splash(100);
+        
+        //clock
+        gameClock = new Clock();
+        t = new Timer(500, updateClockAction);
+        t.start();
+        
+        //start application
+        setTitle("Targeting System");
+        setSize(win_x,win_y);
+        setBackground(Color.white);
+        setForeground(Color.black);
+
+        theDesktop = new JDesktopPane();
+        getContentPane().add(theDesktop);
+        Container container = getContentPane();
+        panel = new MyJPanel();
+        container.add(panel, BorderLayout.CENTER);
+        panel.addMouseListener (new mousePressHandler());
+        //frame.setVisible(true);
+        addWindowListener(new WindowAdapter()
+        {
+            public void windowClosing(WindowEvent e)
+            {
+              System.exit(0);
+            }
+        });
+        setVisible(true);
+
+        //initialize targets
+        for(int i=0; i<3; i++) {
+            targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
+                                   randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
+        }
+
+
+
+    }
+    
+    
+    
+    private boolean successful_hit(int shot_x, int shot_y, int t_x, int t_y)
+    {
+        int targ_x = t_x + target_radius;
+        int targ_y = t_y + target_radius;
+        double distance = Math.sqrt(Math.pow(shot_x - targ_x, 2) + Math.pow(shot_y - targ_y, 2));
+        //System.out.println("distance = "+distance); // debug print
+
+        if(distance <= .5 * (target_diam + target_radius))
+            return true;
+        return false;
+        //double distance = 0;
+    }
+
+
+
+
+    private void refreshAll() {
+        bullets.clear();
+        targets.clear();
+        for(int i=0; i<3; i++) {
+            //creates new UNHIT targets
+            targets.add(new target(randInt(enemy_x, enemy_x+enemy_width),
+                                   randInt(enemy_y, enemy_y+enemy_height), target_diam, targetColor));
+        }
+
+    }
+
+
+    private int game_over() {
+        //different types of game over
+        for(target t : targets) {
+            if(!t.is_hit()) return 0;
+        }
+        return 1;
+    }
+    
+        //for future's sake, this shouldn't really
+    //be inside of the class definition
+    public static int randInt(int min, int max) {
+
+        // NOTE: Usually this should be a field rather than a method
+        // variable so that it is not re-seeded every call.
+        Random rand = new Random();
+
+        // nextInt is normally exclusive of the top value,
+        // so add 1 to make it inclusive
+        int randomNum = rand.nextInt((max - min) + 1) + min;
+
+        return randomNum;
+    }
+    
+
+        
     
     public static void main(String args[]) {
         new TargetingSystem();
     }
 
-
+    
+    
     
 }
 
